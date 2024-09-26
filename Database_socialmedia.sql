@@ -57,6 +57,9 @@ Values
 ('Amelia', 'Wright', 'awright73', 'awright73@outlook.com', '+1 367-794-7416'),
 ('Grace', 'Flores', 'gflores39', 'gflores39@yahoo.com', '+1 206-460-6926');
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 CREATE TABLE followers (
 follower_id INT NOT NULL,
 following_id INT NOT NULL,
@@ -64,6 +67,7 @@ FOREIGN KEY(follower_id) REFERENCES users(user_id),
 FOREIGN KEY(following_id) REFERENCES users(user_id),
 PRIMARY KEY (follower_id, following_id)
 );
+
 
 ALTER TABLE followers
 ADD CONSTRAINT check_follower_id
@@ -98,25 +102,9 @@ VALUES
 (6,31),(11,33),(2,40),(29,9),(19,1),(27,39),(3,7),(3,30),(34,28),(39,17),(30,22),(29,20),(18,25),(22,33),(8,28),(16,32),(15,29),(21,32),(7,1),(11,22),(10,26),(7,31),(35,10),(24,12),(19,26),(11,9),(25,23),(1,35),(33,38),(35,19),(12,24),(7,18),(1,28),(16,33),(18,1),(13,12);
 
 
-#######
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-select follower_id, following_id FROM followers;
-select follower_id FROM followers WHERE following_id = 1;
-select COUNT(follower_id) AS followers FROM followers WHERE following_id = 2;
-######
-
-
-#Top 3 usuarios con mayor número de seguidores#
-Select following_id, COUNT(follower_id) AS followers FROM followers group by following_id ORDER BY followers DESC LIMIT 3;
-
-#TOP 3 usuarios pero haciendo JOIN#
-Select users. user_id, users.user_handle, users.first_name, following_id, COUNT(follower_id) AS followers
-FROM followers
-JOIN users ON users.user_id = followers.following_id
-GROUP BY following_id
-ORDER BY followers DESC
-LIMIT 5;
 
 
 CREATE TABLE texts(
@@ -200,33 +188,8 @@ Values
 (14, "Procrastination is an art I perfect every day."),
 (3, "I just came here to procrastinate... anyone else?");
 
-#¿Cuantos tweets hizo un usuario?
-SELECT user_id, COUNT(*) AS texts_count
-FROM texts
-GROUP BY user_id
-ORDER BY texts_count DESC;
 
-#SUB CONSULTA
-#OBTENER LOS TWEETS DE LOS USUARIOS QUE TIENEN MÁS DE 6 SEGUIDORES
-SELECT texts_id, texts_text, user_id
-FROM texts
-WHERE user_id IN (
-	SELECT following_id
-	FROM followers
-	GROUP BY following_id
-	HAVING COUNT(*) > 6
-    );
-
-#SI QUISIERAMOS BORRAR ALGÚN TEXTS:
-#DELETE FROM tweets WHERE tweet_id = 1;
-#DELETE FROM tweets WHERE user_id = 1;
-DELETE FROM texts WHERE texts_id = 176;
-
-#REMPLAZAR
-
-UPDATE texts SET texts_text =  REPLACE(texts_text, 'Breakfast', 'Lunch')
-WHERE texts_text LIKE '%Breakfast%';
-
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE texts_likes(
 	user_id INT NOT NULL,
@@ -240,24 +203,27 @@ INSERT INTO texts_likes (user_id, texts_id)
 VALUES
 (8,7),(1,4),(21,19),(20,34),(11,3),(38,5),(40,1),(23,24),(31,25),(10,32),(15,11),(11,40),(25,21),(5,9),(29,1),(33,33),(24,33),(7,11),(23,35),(9,36),(20,7),(16,19),(10,33),(27,11),(6,39),(22,9),(19,25),(5,10),(12,30),(18,10),(6,38),(30,33),(18,23),(17,30),(4,19),(6,26),(4,11),(29,36),(12,34);
 
-#OBTENER EL NUMERO DE LIKES PARA CADA TUIT
-SELECT texts_id, COUNT(*) AS like_count
-FROM texts_likes
-GROUP BY texts_id;
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#LOS PRIMEROS 5 USUARIOS EN LA PLATAFORMA
+#1/* how many users are?*/
+
+SELECT
+	COUNT(*) AS "Total_registration"
+FROM users;
+
+----------------------------------------------------------------------------------------------------
+
+#2/*THE FIRST 5 USERS ON THE PLATFORM*/
+	
 SELECT *
 FROM users
 ORDER BY created_at ASC
 LIMIT 5;
 
-#¿CÚANTOS USUARIOS HAY?
-SELECT
-	COUNT(*) AS "Total_registration"
-FROM users;
+----------------------------------------------------------------------------------------------------
 
-#The day of the week most users register on*/
+#3/*The day of the week most users register on*/
 
 CREATE VIEW vwtotalregistrations AS
     SELECT 
@@ -272,10 +238,68 @@ CREATE VIEW vwtotalregistrations AS
     *
 FROM
     vwtotalregistrations;
-    
 
+----------------------------------------------------------------------------------------------------
 
-#The users who have never posted a text*/
+#4/*Top 5 users with the most followers*/
+Select following_id, COUNT(follower_id) AS followers FROM followers group by following_id ORDER BY followers DESC LIMIT 5;
+
+----------------------------------------------------------------------------------------------------
+
+#5/*Top 5 users with the most followers USING JOIN*/
+	
+Select users. user_id, users.user_handle, users.first_name, following_id, COUNT(follower_id) AS followers
+FROM followers
+JOIN users ON users.user_id = followers.following_id
+GROUP BY following_id
+ORDER BY followers DESC
+LIMIT 5;
+
+----------------------------------------------------------------------------------------------------
+
+#6/*IF WE WANT TO DELETE SOME TEXTS:*/
+	
+DELETE FROM tweets WHERE user_id = 1;
+DELETE FROM texts WHERE texts_id = 176;
+
+----------------------------------------------------------------------------------------------------
+
+#7/*REPLACE*/
+
+UPDATE texts SET texts_text =  REPLACE(texts_text, 'Breakfast', 'Lunch')
+WHERE texts_text LIKE '%Breakfast%';
+
+----------------------------------------------------------------------------------------------------
+
+#8/*How many tweets did a user make?*/
+SELECT user_id, COUNT(*) AS texts_count
+FROM texts
+GROUP BY user_id
+ORDER BY texts_count DESC;
+
+----------------------------------------------------------------------------------------------------
+
+9# /*#GET TWEETS FROM USERS WHO HAVE MORE THAN 6 FOLLOWERS*/
+	
+SELECT texts_id, texts_text, user_id
+FROM texts
+WHERE user_id IN (
+	SELECT following_id
+	FROM followers
+	GROUP BY following_id
+	HAVING COUNT(*) > 6
+    );
+
+----------------------------------------------------------------------------------------------------
+
+#10 /*GET THE NUMBER OF LIKES FOR EACH TWEET*/
+SELECT texts_id, COUNT(*) AS like_count
+FROM texts_likes
+GROUP BY texts_id;
+
+----------------------------------------------------------------------------------------------------    
+
+#11/*The users who have never posted a text*/
 
 SELECT *
 FROM users
@@ -283,7 +307,9 @@ LEFT JOIN texts
 ON users.user_id = texts.user_id
 WHERE texts_id IS NULL;
 
-#The number of text posted by most active users*/
+----------------------------------------------------------------------------------------------------
+
+#12/*The number of text posted by most active users*/
 
 SELECT 
 	first_name,
@@ -296,7 +322,9 @@ GROUP BY Username
 ORDER BY 3 DESC
 LIMIT 5;
 
-#The total number of posts*/
+----------------------------------------------------------------------------------------------------
+
+#13/*The total number of posts*/
 
 SELECT
 	SUM(user_posts.total_posts_per_user) AS 'Total Posts by Users'
@@ -307,16 +335,19 @@ FROM
         texts
     JOIN users ON users.user_id = texts.user_id
     GROUP BY user_handle) AS user_posts;
-    
-#The total number of users with posts*/
+
+----------------------------------------------------------------------------------------------------
+
+#14/*The total number of users with posts*/
 SELECT COUNT(DISTINCT users.user_id) AS total_number_of_users_with_posts
 FROM
    users
         JOIN
     texts ON texts.user_id = users.user_id;
     
+----------------------------------------------------------------------------------------------------
 
-#The usernames with numbers as ending*/
+#15/*The usernames with numbers as ending,number 1 and 'A'*/
 
 SELECT user_id, user_handle
 FROM users
@@ -333,13 +364,16 @@ SELECT user_id, user_handle
 FROM users
 WHERE
     user_handle REGEXP '[$A]';
-    
+
+----------------------------------------------------------------------------------------------------
     
 SELECT COUNT(user_handle)
 FROM users
 WHERE user_handle REGEXP '[$A]';
 
-#Total number of users without likes*/
+----------------------------------------------------------------------------------------------------
+
+#16/*Total number of users without likes*/
 
 SELECT 
     COUNT(*) AS total_number_of_users_without_likes
